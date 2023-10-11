@@ -1,0 +1,1079 @@
+1#Program for 8x8 LED Matrix
+
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+import re
+import time
+import argparse
+
+from luma.led_matrix.device import max7219
+from luma.core.interface.serial import spi, noop
+from luma.core.render import canvas
+from luma.core.virtual import viewport
+from luma.core.legacy import text, show_message
+from luma.core.legacy.font import proportional, CP437_FONT, TINY_FONT, SINCLAIR_FONT, LCD_FONT
+
+
+def demo(n, block_orientation, rotate, msg):
+    # create matrix device
+    serial = spi(port=0, device=0, gpio=noop())
+    device = max7219(serial, cascaded=n or 1, block_orientation=block_orientation, rotate=rotate or 0)
+    show_message(device, msg, fill="white", font=proportional(LCD_FONT), scroll_delay=0.1)
+    time.sleep(3)
+    pass
+
+if __name__ == "__main__":    
+    try:
+        text_display = raw_input("Enter message to be display on 8x8 matrix =")
+        demo(1, 0, 0, text_display)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print "Program exit..."
+
+
+
+2# Program for Oscilloscope
+
+import time
+import matplotlib.pyplot as plt
+from drawnow import *
+import Adafruit_ADS1x15
+
+adc = Adafruit_ADS1x15.ADS1115()
+
+GAIN = 1
+val = [ ]
+cnt = 0
+plt.ion()
+# Start continuous ADC conversions on channel 0 using the previous gain value.
+adc.start_adc(0, gain=GAIN)
+print('Reading ADS1x15 channel 0')
+#create the figure function
+
+def makeFig():
+    plt.ylim(-5000,5000)
+    plt.title('Discover LAB Osciloscope')
+    plt.grid(True)
+    plt.ylabel('ADC outputs')
+    plt.plot(val, 'ro-', label='Channel 0')
+    plt.legend(loc='lower right')
+    
+while (True):
+    # Read the last ADC conversion value and print it out.
+    value = adc.get_last_result()
+    print('Channel 0: {0}'.format(value))
+    # Sleep for half a second.
+    time.sleep(0.1)
+    val.append(int(value))
+    drawnow(makeFig)
+    plt.pause(.000001)
+    cnt = cnt+1
+    if(cnt>50):
+        val.pop(0)
+
+
+
+3#Program using PiCamera
+
+#!/usr/bin/env python _
+# -*- coding: utf-8 -*-
+
+
+from picamera.array import PiRGBArray
+from picamera import Picamera
+import time
+import cv2
+
+camera=Picamera()
+camera.resolution=(640,480)
+camera.frameter=32
+rawCapture=PiRGBArray(camera,size=(640,480))
+
+print("*Warningg up.....*")
+time.sleep(0.1)
+
+for frame in camera.capture_continuos(rawCapture,format="bgr", use_camera_port=True):
+    image=frame.array
+    cv2.imshow("Home monitoring system",image)
+    key=cv2.waitKey(1)&0xFF
+    rawCapture.truncate(0)
+    if Key == ord("q"):
+        break
+
+4#Program for 7-segment display
+
+#!/usr/bin/python
+
+import time
+import datetime
+from lib import tm1637 as obj
+
+Display = obj.TM1637(2,3,5)
+Display.Clear()
+
+while(True):
+    now = datetime.datetime.now()
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+    Display.Clear()    
+    val = [(int(hour / 10)), (hour % 10), (int(minute / 10)), (minute % 10) ]
+    Display.Show(val) 
+    Display.ShowDoublepoint((second % 2))          
+    time.sleep(0.25)
+
+
+5#Program for Telegram
+
+import sys
+import time
+import random
+import datetime
+import telepot
+import RPi.GPIO as GPIO
+
+RELAY1 = 20
+RELAY2 = 16
+
+FAN   = RELAY1
+LIGHT = RELAY2
+
+GPIO.setwarnings(False)
+# to use Raspberry Pi board pin numbers
+GPIO.setmode(GPIO.BCM)
+GPIO.cleanup()
+# set up GPIO output channel
+GPIO.setup(RELAY1, GPIO.OUT)
+GPIO.setup(RELAY2, GPIO.OUT)
+
+#Your Telegram token key variable.
+telegramBotToken = '569118625:AAEKVHb_d_sUls8i91sZWMYUkXNanUD-j1k'
+
+#function to on and off devices
+def on(pin):
+        GPIO.output(pin,GPIO.HIGH)
+        return "on"
+
+def off(pin):
+        GPIO.output(pin,GPIO.LOW)
+        return "off"
+
+def handle(msg):
+    chat_id = msg['chat']['id']
+    print str(chat_id)
+    command = str(msg['text'])
+
+    print 'Receive message from Telegram: %s' % command
+
+    if 'Fan' in command or 'fan' in command:
+            if 'on' in command:
+                    bot.sendMessage(chat_id, str( "Fan " + on(FAN) ))
+            elif 'off' in command:
+                    bot.sendMessage(chat_id, str( "Fan " + off(FAN) ))
+            
+    elif 'Light' in command or 'light' in command:
+            if 'on' in command:
+                    bot.sendMessage(chat_id, str( "Light " + on(LIGHT) ))
+            elif 'off' in command:
+                    bot.sendMessage(chat_id, str("Light " + off(LIGHT) ))
+            
+bot = telepot.Bot(telegramBotToken)
+bot.message_loop(handle)
+print 'I am listening...'
+
+while 1:
+     time.sleep(10)
+
+
+6# Program for Home Automation
+
+import RPi.GPIO as GPIO
+import BlynkLib
+import time
+
+RELAY1 = 20
+RELAY2 = 16
+
+FAN   = RELAY1
+LIGHT = RELAY2
+
+GPIO.setwarnings(False)
+# to use Raspberry Pi board pin numbers
+GPIO.setmode(GPIO.BCM)
+GPIO.cleanup()
+# set up GPIO output channel
+GPIO.setup(RELAY1, GPIO.OUT)
+GPIO.setup(RELAY2, GPIO.OUT)
+
+BLYNK_AUTH = '49ddea718ff4492ca87f8620c68bc93c'
+
+# Initialize Blynk
+blynk = BlynkLib.Blynk(BLYNK_AUTH)
+
+# Register Virtual Pins
+@blynk.VIRTUAL_WRITE(1)
+def my_write_handler(value):
+        print "V1 = " + str(value)
+        if '1' in str(value):
+                on(FAN)
+        elif '0' in str(value):
+                off(FAN)
+
+# Register Virtual Pins
+@blynk.VIRTUAL_WRITE(2)
+def my_write_handler(value):
+        print "V2 = " + str(value)
+        if '1' in str(value):
+                on(LIGHT)
+        elif '0' in str(value):
+                off(LIGHT)
+
+#function to on and off devices
+def on(pin):
+        GPIO.output(pin,GPIO.HIGH)
+        return "on"
+
+def off(pin):
+        GPIO.output(pin,GPIO.LOW)
+        return "off"
+
+
+# Start Blynk (this call should never return)
+blynk.run()
+
+
+7#Program for Fingerprint Module
+
+#!/usr/bin/env python _
+# -*- coding: utf-8 -*-
+
+
+import time
+import RPi.GPIO as GPIO
+import sys
+from threading import Thread
+from pyfingerprint.pyfingerprint import PyFingerprint
+
+
+#############GPIO configuration#######
+GPIO.setwarnings(False)
+GPIO.cleanup()
+GPIO.setmode(GPIO.BCM)
+######################################
+
+##################  Global Variables #############
+
+#Initialize Fingerprint Module object
+
+
+try:
+    fingerprint_module = PyFingerprint('/dev/ttyUSB0', 57600, 0xFFFFFFFF, 0x00000000)
+    if ( fingerprint_module.verifyPassword() == False ):
+        raise ValueError('The given fingerprint sensor password is wrong!')
+except:
+    try:
+        fingerprint_module = PyFingerprint('/dev/ttyUSB1', 57600, 0xFFFFFFFF, 0x00000000)
+        if ( fingerprint_module.verifyPassword() == False ):
+            raise ValueError('The given fingerprint sensor password is wrong!')
+    except:
+        try:
+            fingerprint_module = PyFingerprint('/dev/ttyUSB2', 57600, 0xFFFFFFFF, 0x00000000)
+            if ( fingerprint_module.verifyPassword() == False ):
+                raise ValueError('The given fingerprint sensor password is wrong!')
+        except:
+            try:
+                fingerprint_module = PyFingerprint('/dev/ttyUSB3', 57600, 0xFFFFFFFF, 0x00000000)
+                if ( fingerprint_module.verifyPassword() == False ):
+                    raise ValueError('The given fingerprint sensor password is wrong!')
+            except Exception as e:
+                print('Exception message: ' + str(e))
+                exit(1)
+                pass
+            pass
+        pass
+    pass    
+
+'''
+try:
+    fingerprint_module = PyFingerprint('/dev/ttyUSB0', 57600, 0xFFFFFFFF, 0x00000000)
+    if ( fingerprint_module.verifyPassword() == False ):
+        raise ValueError('The given fingerprint sensor password is wrong!')
+except Exception as e:
+    print('Exception message: ' + str(e))
+    exit(1)
+'''
+
+
+##################  Lcd defines  #################
+
+# Define GPIO to LCD mapping
+LCD_RS = 13   
+LCD_E  = 19       
+LCD_D4 = 6 
+LCD_D5 = 5         
+LCD_D6 = 21       
+LCD_D7 = 26
+
+#configure GPIO as output
+GPIO.setup(LCD_E, GPIO.OUT)  # E
+GPIO.setup(LCD_RS, GPIO.OUT) # RS
+GPIO.setup(LCD_D4, GPIO.OUT) # DB4
+GPIO.setup(LCD_D5, GPIO.OUT) # DB5
+GPIO.setup(LCD_D6, GPIO.OUT) # DB6
+GPIO.setup(LCD_D7, GPIO.OUT) # DB7
+
+# Define some device constants
+LCD_WIDTH = 16    # Maximum characters per line
+LCD_CHR = True
+LCD_CMD = False
+
+LCD_LINE_1 = 0x80 # LCD RAM address for the 1st line
+LCD_LINE_2 = 0xC0 # LCD RAM address for the 2nd line
+
+# Timing constants
+E_PULSE = 0.0005
+E_DELAY = 0.0005
+
+LCD_SCRL_DEL = 0.14529  #LCD scrolling delay
+
+#LCD function to initialize, display character on it.
+
+def lcd_init():
+    # Initialise display
+    lcd_byte(0x33,LCD_CMD) # 110011 Initialise
+    lcd_byte(0x32,LCD_CMD) # 110010 Initialise
+    lcd_byte(0x06,LCD_CMD) # 000110 Cursor move direction
+    lcd_byte(0x0C,LCD_CMD) # 001100 Display On,Cursor Off, Blink Off
+    lcd_byte(0x28,LCD_CMD) # 101000 Data length, number of lines, font size
+    lcd_byte(0x01,LCD_CMD) # 000001 Clear display
+    time.sleep(E_DELAY)
+
+def lcd_byte(bits, mode):
+    # Send byte to data pins
+    # bits = data
+    # mode = True  for character or False for command    
+
+    GPIO.output(LCD_RS, mode) # RS
+    # High bits
+    GPIO.output(LCD_D4, False)
+    GPIO.output(LCD_D5, False)
+    GPIO.output(LCD_D6, False)
+    GPIO.output(LCD_D7, False)
+    if bits&0x10==0x10:
+        GPIO.output(LCD_D4, True)
+    if bits&0x20==0x20:
+        GPIO.output(LCD_D5, True)
+    if bits&0x40==0x40:
+        GPIO.output(LCD_D6, True)
+    if bits&0x80==0x80:
+        GPIO.output(LCD_D7, True)
+
+    # Toggle 'Enable' pin
+    lcd_toggle_enable()
+
+    # Low bits
+    GPIO.output(LCD_D4, False)
+    GPIO.output(LCD_D5, False)
+    GPIO.output(LCD_D6, False)
+    GPIO.output(LCD_D7, False)
+    if bits&0x01==0x01:
+        GPIO.output(LCD_D4, True)
+    if bits&0x02==0x02:
+        GPIO.output(LCD_D5, True)
+    if bits&0x04==0x04:
+        GPIO.output(LCD_D6, True)
+    if bits&0x08==0x08:
+        GPIO.output(LCD_D7, True)
+
+    # Toggle 'Enable' pin
+    lcd_toggle_enable()
+
+def lcd_toggle_enable():
+    # Toggle enable
+    time.sleep(E_DELAY)
+    GPIO.output(LCD_E, True)
+    time.sleep(E_PULSE)
+    GPIO.output(LCD_E, False)
+    time.sleep(E_DELAY)
+
+def lcd_string(message,line):
+    # Send string to display
+    message = message.ljust(LCD_WIDTH," ")
+    lcd_byte(line, LCD_CMD)
+    for i in range(LCD_WIDTH):
+        lcd_byte(ord(message[i]),LCD_CHR)
+
+def lcd_string_scroll(message, line, SCL_DELAY):
+    string = message.strip()
+    string = "               " + string
+    #print "length = " + str(len(string))
+    if line == 1:
+        lcd_string("                ", line)
+        for i in range(len(message)+1+16):
+            lcd_string(string, line)
+            time.sleep(SCL_DELAY)
+            string = string[1:] + " " 
+        pass
+    else:
+        lcd_string("                ", line)
+        for i in range(len(message)+1+16):
+            lcd_string(string, line)
+            time.sleep(SCL_DELAY)
+            string = string[1:] + " "
+        pass
+
+################## End of Lcd defines  #################
+
+################## User function #######################
+def delayms(time_in_msec):
+    time.sleep( (time_in_msec/1000) )
+    pass
+
+def delaysec(time_in_sec):
+    time.sleep(time_in_sec)
+
+def enrollFingerInDB():
+    print "Enroll your Finger into Fingerprint Database"
+    #========================== Start ============================
+    
+    try:
+        print('Keep your finger...')
+
+        # wait till the person keep finger on module
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        # Transform read fingeprint image to characteristics and stores it in charbuffer 1
+        fingerprint_module.convertImage(0x01)
+
+        # Checks for duplicate template in database
+        result = fingerprint_module.searchTemplate()
+        positionNumber = result[0]
+
+        if ( positionNumber >= 0 ):
+            print('This fingerprint template already exists at position number = ' + str(positionNumber))
+
+        print('Remove your finger...')
+        delaysec(2)
+
+        print('Keep your finger again...')
+
+        ## Wait that finger is read again
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        ## Converts read image to characteristics and stores it in charbuffer 2
+        fingerprint_module.convertImage(0x02)
+
+        ## Compares the charbuffers
+        if ( fingerprint_module.compareCharacteristics() == 0 ):
+            raise Exception('Fingers do not match')
+
+        ## Creates a template
+        fingerprint_module.createTemplate()
+
+        ## Saves template at new position number
+        positionNumber = fingerprint_module.storeTemplate()
+        print('Finger enrolled successfully!')
+        print('New template position #' + str(positionNumber))
+
+    except Exception as e:
+        print('Enrollment fail.')
+        print('Error : ' + str(e))      
+
+
+    #==========================  End  ============================
+    
+    pass
+
+def searchFingerInDB():
+    print "Search your Finger into Fingerprint Database"
+    #========================== Start ============================
+    try:
+        print('Keep your finger...')
+
+        ## Wait that finger is read
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        ## Converts read image to characteristics and stores it in charbuffer 1
+        fingerprint_module.convertImage(0x01)
+
+        ## Searchs template
+        result = fingerprint_module.searchTemplate()
+
+        positionNumber = result[0]
+        accuracyScore = result[1]
+
+        if ( positionNumber == -1 ):
+            print('No fingerprint template match found.')
+        else:
+            print('Fingerprint found at position number = ' + str(positionNumber))
+            
+    except Exception as e:
+        print('Searching fail.')
+        print('Error : ' + str(e))
+
+    #==========================  End  ============================
+    pass
+
+def deleteFingerInDB():
+    print "Delete your Finger data from Fingerprint Database"
+    #========================== Start ============================
+    try:
+        positionNumber = input('Please enter the template position you want to delete (in range 0 to 1000): ')
+        positionNumber = int(positionNumber)
+
+        if ( fingerprint_module.deleteTemplate(positionNumber) == True ):
+            print('Template deleted successfully.')
+
+    except Exception as e:
+        print('Deletion fail.')
+        print('Error : ' + str(e))       
+
+    #==========================  End  ============================
+    pass
+
+def getFingerPrintImage():
+    print "Generate finger print image"
+    #========================== Start ============================
+    try:
+        print('Keep your finger... and wait for seconds')
+
+        # Wait for finger  unless it is read.
+        while ( fingerprint_module.readImage() == False ):
+            pass
+        
+        fingerprint_module.downloadImage('fingerprint.bmp')
+        print('The image is available in current program directory.')
+
+    except Exception as e:
+        print('Image generation fail.')
+        print('Error : ' + str(e))
+
+    #==========================  End  ============================
+    pass
+
+ 
+def helpMe():
+    print "\nHelp documentation for R305 finger print module uses on Raspberry pi."
+
+    print "\n\n\n\n\n\n\nPress any key to get out from here."
+    exi = raw_input()
+    print "\n"
+    pass
+
+def clearscreen():
+    for i in range(50):
+        print "\n"
+        pass
+    pass
+
+
+def clearscreen(no_of_line):
+    for i in range(no_of_line):
+        print "\n"
+        pass
+    pass
+
+
+def getFingerprintTemplateCount():
+    clearscreen(25)
+    print('Fingerprint template , in database =  ' + str(fingerprint_module.getTemplateCount()) +'/'+ str(fingerprint_module.getStorageCapacity()))
+    pass
+## Tries to initialize the sensor
+
+
+
+################# End of User function #################
+
+#########################################################
+#Thread function for LCD 
+def testOnLCD():
+    #print "t7 here\n"
+    lcd_init()                  #intialize 16x2 LCD module
+    
+    try:
+        lcd_string("Keep your finger          ",LCD_LINE_1)
+        lcd_string("on sensor...              ",LCD_LINE_2)
+
+        ## Wait that finger is read
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        ## Converts read image to characteristics and stores it in charbuffer 1
+        fingerprint_module.convertImage(0x01)
+
+        ## Searchs template
+        result = fingerprint_module.searchTemplate()
+
+        positionNumber = result[0]
+        accuracyScore = result[1]
+
+        if ( positionNumber == -1 ):
+            lcd_string("Unauthorized              ",LCD_LINE_1)
+            lcd_string("person...                 ",LCD_LINE_2)
+        else:
+            lcd_string("Authorized                ",LCD_LINE_1)
+            lcd_string("person...                 ",LCD_LINE_2)
+        delaysec(3)
+    except Exception as e:
+        lcd_string("Failure                  ",LCD_LINE_1)
+        lcd_string("searching...             ",LCD_LINE_2)
+        print('Error : ' + str(e))
+    lcd_string("Choose option in              ",LCD_LINE_1)
+    lcd_string("Menu...                       ",LCD_LINE_2)
+    
+
+#########################################################
+
+
+def main():
+    
+    clearscreen(25)
+    
+    choice = 0                  #for choosing the option
+    global fingerprint_module   #object for fingerprint module
+    
+    print "Initialization done...Starting program"
+    delaysec(1)
+    
+    while True:  # 1st loop
+        clearscreen(25)
+        print " Program to demonstrate use of fingerprint module R305 on LCD"
+        print "\n\n Choose option in Menu below.\n 1.Enroll Fingerprint.\n 2.Search Fingerprint.\n 3.Delete Fingerprint.\n 4.Get Fingerprint Image.\n 5.Run Fingerprint on LCD."
+        print " 6.Get fingerprint record count in Database.\n 7.Help.\n 8.Exit Program.\n\n"
+        print " Enter choice: " 
+        choice = int(raw_input())
+
+        #Enroll finger into Database.
+        if choice == 1:
+            enrollFingerInDB()
+            pass
+        
+        #Search finger into Database.
+        if choice == 2:
+            searchFingerInDB()
+            pass
+        
+        #Delete finger into Database.  
+        if choice == 3:
+            deleteFingerInDB()
+            pass
+        
+        #Get and display finger print image.
+        if choice == 4:
+            getFingerPrintImage()
+            pass
+        
+        #Run finger print with LCD 
+        if choice == 5:
+            testOnLCD()  
+            pass   
+        
+        #Get fingerprint templates database information
+        if choice == 6:
+            getFingerprintTemplateCount()
+            pass
+        
+        #Help user with documentation of using this module
+        if choice == 7:
+            helpMe()
+            pass
+
+        if choice == 8:
+            exit(0)
+            pass
+
+        delaysec(0.5) 
+        pass     #end of 1st loop
+    pass
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        lcd_string("Program         ",LCD_LINE_1)
+        lcd_string("Terminated...   ",LCD_LINE_2)
+        GPIO.cleanup()
+        print "\n\nProgram terminated..."
+
+22@se
+import time
+import sys
+from threading import Thread
+from pyfingerprint.pyfingerprint import PyFingerprint
+
+
+#Initialize Fingerprint Module object
+
+
+try:
+    fingerprint_module = PyFingerprint('/dev/ttyUSB0', 57600, 0xFFFFFFFF, 0x00000000)
+    if ( fingerprint_module.verifyPassword() == False ):
+        raise ValueError('The given fingerprint sensor password is wrong!')
+except:
+    try:
+        fingerprint_module = PyFingerprint('/dev/ttyUSB1', 57600, 0xFFFFFFFF, 0x00000000)
+        if ( fingerprint_module.verifyPassword() == False ):
+            raise ValueError('The given fingerprint sensor password is wrong!')
+    except:
+        try:
+            fingerprint_module = PyFingerprint('/dev/ttyUSB2', 57600, 0xFFFFFFFF, 0x00000000)
+            if ( fingerprint_module.verifyPassword() == False ):
+                raise ValueError('The given fingerprint sensor password is wrong!')
+        except:
+            try:
+                fingerprint_module = PyFingerprint('/dev/ttyUSB3', 57600, 0xFFFFFFFF, 0x00000000)
+                if ( fingerprint_module.verifyPassword() == False ):
+                    raise ValueError('The given fingerprint sensor password is wrong!')
+            except Exception as e:
+                print('Exception message: ' + str(e))
+                exit(1)
+                pass
+            pass
+        pass
+    pass    
+
+'''
+try:
+    fingerprint_module = PyFingerprint('/dev/ttyUSB0', 57600, 0xFFFFFFFF, 0x00000000)
+    if ( fingerprint_module.verifyPassword() == False ):
+        raise ValueError('The given fingerprint sensor password is wrong!')
+except Exception as e:
+    print('Exception message: ' + str(e))
+    exit(1)
+'''
+
+
+################## User function #######################
+def delayms(time_in_msec):
+    time.sleep( (time_in_msec/1000) )
+    pass
+
+def delaysec(time_in_sec):
+    time.sleep(time_in_sec)
+
+def enrollFingerInDB():
+    print "Enroll your Finger into Fingerprint Database"
+    #========================== Start ============================
+    
+    try:
+        print('Keep your finger...')
+
+        # wait till the person keep finger on module
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        # Transform read fingeprint image to characteristics and stores it in charbuffer 1
+        fingerprint_module.convertImage(0x01)
+
+        # Checks for duplicate template in database
+        result = fingerprint_module.searchTemplate()
+        positionNumber = result[0]
+
+        if ( positionNumber >= 0 ):
+            print('This fingerprint template already exists at position number = ' + str(positionNumber))
+
+        print('Remove your finger...')
+        delaysec(2)
+
+        print('Keep your finger again...')
+
+        ## Wait that finger is read again
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        ## Converts read image to characteristics and stores it in charbuffer 2
+        fingerprint_module.convertImage(0x02)
+
+        ## Compares the charbuffers
+        if ( fingerprint_module.compareCharacteristics() == 0 ):
+            raise Exception('Fingers do not match')
+
+        ## Creates a template
+        fingerprint_module.createTemplate()
+
+        ## Saves template at new position number
+        positionNumber = fingerprint_module.storeTemplate()
+        print('Finger enrolled successfully!')
+        print('New template position #' + str(positionNumber))
+
+    except Exception as e:
+        print('Enrollment fail.')
+        print('Error : ' + str(e))      
+
+
+    #==========================  End  ============================
+    
+    pass
+
+def searchFingerInDB():
+    print "Search your Finger into Fingerprint Database"
+    #========================== Start ============================
+    try:
+        print('Keep your finger...')
+
+        ## Wait that finger is read
+        while ( fingerprint_module.readImage() == False ):
+            pass
+
+        ## Converts read image to characteristics and stores it in charbuffer 1
+        fingerprint_module.convertImage(0x01)
+
+        ## Searchs template
+        result = fingerprint_module.searchTemplate()
+
+        positionNumber = result[0]
+        accuracyScore = result[1]
+
+        if ( positionNumber == -1 ):
+            print('No fingerprint template match found.')
+        else:
+            print('Fingerprint found at position number = ' + str(positionNumber))
+            
+    except Exception as e:
+        print('Searching fail.')
+        print('Error : ' + str(e))
+
+    #==========================  End  ============================
+    pass
+
+def deleteFingerInDB():
+    print "Delete your Finger data from Fingerprint Database"
+    #========================== Start ============================
+    try:
+        positionNumber = input('Please enter the template position you want to delete (in range 0 to 1000): ')
+        positionNumber = int(positionNumber)
+
+        if ( fingerprint_module.deleteTemplate(positionNumber) == True ):
+            print('Template deleted successfully.')
+
+    except Exception as e:
+        print('Deletion fail.')
+        print('Error : ' + str(e))       
+
+    #==========================  End  ============================
+    pass
+
+def getFingerPrintImage():
+    print "Generate finger print image"
+    #========================== Start ============================
+    try:
+        print('Keep your finger... and wait for seconds')
+
+        # Wait for finger  unless it is read.
+        while ( fingerprint_module.readImage() == False ):
+            pass
+        
+        fingerprint_module.downloadImage('fingerprint.bmp')
+        print('The image is available in current program directory.')
+
+    except Exception as e:
+        print('Image generation fail.')
+        print('Error : ' + str(e))
+
+    #==========================  End  ============================
+    pass
+
+ 
+def helpMe():
+    print "\nHelp documentation for R305 finger print module uses on Raspberry pi."
+
+    print "\n\n\n\n\n\n\nPress any key to get out from here."
+    exi = raw_input()
+    print "\n"
+    pass
+
+def clearscreen():
+    for i in range(50):
+        print "\n"
+        pass
+    pass
+
+
+def clearscreen(no_of_line):
+    for i in range(no_of_line):
+        print "\n"
+        pass
+    pass
+
+
+def getFingerprintTemplateCount():
+    clearscreen(25)
+    print('Fingerprint template , in database =  ' + str(fingerprint_module.getTemplateCount()) +'/'+ str(fingerprint_module.getStorageCapacity()))
+    pass
+## Tries to initialize the sensor
+
+
+
+################# End of User function #################
+
+
+def main():
+    
+    clearscreen(25)
+    
+    choice = 0                  #for choosing the option
+    global fingerprint_module   #object for fingerprint module
+    
+    print "Initialization done...Starting program"
+    delaysec(1)
+    
+    while True:  # 1st loop
+        clearscreen(25)
+        print " Program to demonstrate use of fingerprint module R305 on LCD"
+        print "\n\n Choose option in Menu below.\n 1.Enroll Fingerprint.\n 2.Search Fingerprint.\n 3.Delete Fingerprint.\n 4.Get Fingerprint Image.\n 5.Run Fingerprint on LCD."
+        print " 6.Get fingerprint record count in Database.\n 7.Help.\n 8.Exit Program.\n\n"
+        print " Enter choice: " 
+        choice = int(raw_input())
+
+        #Enroll finger into Database.
+        if choice == 1:
+            enrollFingerInDB()
+            pass
+        
+        #Search finger into Database.
+        if choice == 2:
+            searchFingerInDB()
+            pass
+        
+        #Delete finger into Database.  
+        if choice == 3:
+            deleteFingerInDB()
+            pass
+        
+        #Get and display finger print image.
+        if choice == 4:
+            getFingerPrintImage()
+            pass
+        
+        #Run finger print with LCD 
+        if choice == 5:
+            testOnLCD()  
+            pass   
+        
+        #Get fingerprint templates database information
+        if choice == 6:
+            getFingerprintTemplateCount()
+            pass
+        
+        #Help user with documentation of using this module
+        if choice == 7:
+            helpMe()
+            pass
+
+        if choice == 8:
+            exit(0)
+            pass
+
+        delaysec(0.5) 
+        pass     #end of 1st loop
+    pass
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        lcd_string("Program         ",LCD_LINE_1)
+        lcd_string("Terminated...   ",LCD_LINE_2)
+        GPIO.cleanup()
+        print "\n\nProgram terminated..."
+
+
+$4
+import time
+from pyfingerprint.pyfingerprint import PyFingerprint
+
+def initialize_fingerprint_module():
+    for port in ['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyUSB2', '/dev/ttyUSB3']:
+        try:
+            fingerprint_module = PyFingerprint(port, 57600, 0xFFFFFFFF, 0x00000000)
+            if fingerprint_module.verifyPassword():
+                return fingerprint_module
+        except Exception as e:
+            pass
+    raise ValueError('Failed to initialize fingerprint module')
+
+def delay_ms(time_in_msec):
+    time.sleep(time_in_msec / 1000)
+
+def enroll_finger_in_db(module):
+    # Implementation for enrolling fingerprint
+    pass
+
+def search_finger_in_db(module):
+    # Implementation for searching fingerprint
+    pass
+
+def delete_finger_in_db(module):
+    # Implementation for deleting fingerprint
+    pass
+
+def get_fingerprint_image(module):
+    # Implementation for getting fingerprint image
+    pass
+
+def test_on_lcd(module):
+    # Implementation for running fingerprint on LCD
+    pass
+
+def get_fingerprint_template_count(module):
+    # Implementation for getting fingerprint template count
+    pass
+
+def help_me():
+    print("\nHelp documentation for R305 fingerprint module usage on Raspberry Pi.")
+    input("\nPress Enter to exit.")
+
+def main():
+    fingerprint_module = initialize_fingerprint_module()
+
+    while True:
+        clear_screen()
+        print("Program to demonstrate use of fingerprint module R305 on LCD")
+        print("\nChoose option in Menu below:")
+        print("1. Enroll Fingerprint")
+        print("2. Search Fingerprint")
+        print("3. Delete Fingerprint")
+        print("4. Get Fingerprint Image")
+        print("5. Run Fingerprint on LCD")
+        print("6. Get Fingerprint Record Count")
+        print("7. Help")
+        print("8. Exit Program")
+        choice = int(input("\nEnter choice: "))
+
+        if choice == 1:
+            enroll_finger_in_db(fingerprint_module)
+        elif choice == 2:
+            search_finger_in_db(fingerprint_module)
+        elif choice == 3:
+            delete_finger_in_db(fingerprint_module)
+        elif choice == 4:
+            get_fingerprint_image(fingerprint_module)
+        elif choice == 5:
+            test_on_lcd(fingerprint_module)
+        elif choice == 6:
+            get_fingerprint_template_count(fingerprint_module)
+        elif choice == 7:
+            help_me()
+        elif choice == 8:
+            exit(0)
+
+        delay_ms(500)
+
+def clear_screen():
+    print("\n" * 50)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
